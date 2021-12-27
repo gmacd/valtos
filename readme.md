@@ -1,3 +1,9 @@
+# How to build + run
+- Build
+  - `zig build`
+- Run
+  - `qemu-system-riscv64 -machine virt -serial mon:stdio -bios zig-out/bin/valtos.elf`
+
 # Goal
 Build something similar to xv6, for riscv64, aarch64, etc, in zig.
 
