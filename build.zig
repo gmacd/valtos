@@ -15,11 +15,12 @@ pub fn build(b: *std.build.Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const buildMode = b.standardReleaseOptions();
 
-    const kernel = b.addExecutable("valtos.elf", "src/start.zig");
-    kernel.addAssemblyFile("src/entry.s");
+    const kernel = b.addExecutable("valtos.elf", "src/kernel/start.zig");
+    kernel.addAssemblyFile("src/kernel/entry.s");
+    kernel.addAssemblyFile("src/kernel/kernelvec.s");
     kernel.setTarget(target);
     kernel.setBuildMode(buildMode);
-    kernel.setLinkerScriptPath(FileSource{ .path = "src/kernel.ld" });
+    kernel.setLinkerScriptPath(FileSource{ .path = "src/kernel/kernel.ld" });
     kernel.code_model = .medium;
 
     const installKernel = b.addInstallArtifact(kernel);
@@ -31,7 +32,7 @@ pub fn build(b: *std.build.Builder) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    const kernel_tests = b.addTest("src/start.zig");
+    const kernel_tests = b.addTest("src/kernel/start.zig");
     kernel_tests.setTarget(target);
     kernel_tests.setBuildMode(buildMode);
 
