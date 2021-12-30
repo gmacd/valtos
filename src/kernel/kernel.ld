@@ -4,7 +4,7 @@ ENTRY(_entry)
 SECTIONS
 {
     /*
-     * ensure that entry.S / _entry is at 0x80000000,
+     * ensure that entry.s / _entry is at 0x80000000,
      * where qemu's -kernel jumps.
      */
     . = 0x80000000;
@@ -12,10 +12,10 @@ SECTIONS
     .text : {
         *(.text .text.*)
         . = ALIGN(0x1000);
-        /*_trampoline = .;
+        _trampoline = .;
         *(trampsec)
         . = ALIGN(0x1000);
-        ASSERT(. - _trampoline == 0x1000, "error: trampoline larger than one page");*/
+        ASSERT(. - _trampoline == 0x1000, "error: trampoline larger than one page");
         PROVIDE(etext = .);
     }
 

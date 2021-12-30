@@ -36,8 +36,8 @@
   - [ ] fs.c
   - [ ] fs.h
   - [ ] kalloc.c
-  - [ ] kernel.ld
-  - [ ] kernelvec.S
+  - [x] kernel.ld
+  - [x] kernelvec.S
   - [ ] log.c
   - [ ] main.c
   - [ ] memlayout.h
@@ -61,7 +61,7 @@
   - [ ] syscall.h
   - [ ] sysfile.c
   - [ ] sysproc.c
-  - [ ] trampoline.S
+  - [x] trampoline.S
   - [ ] trap.c
   - [ ] types.h
   - [ ] uart.c
