@@ -7,7 +7,8 @@
   - `ctrl-a, x`
 
 # Goal
-Build something similar to xv6, for riscv64, aarch64, etc, in zig.
+1. Implement xv6 in zig.
+2. ?
 
 # References
 
@@ -18,3 +19,77 @@ Build something similar to xv6, for riscv64, aarch64, etc, in zig.
 
 ## Riscv
 - [Code Models](https://www.sifive.com/blog/all-aboard-part-4-risc-v-code-models)
+
+## TODO
+- ../../xv6-riscv//kernel:
+  - [ ] bio.c
+  - [ ] buf.h
+  - [ ] console.c
+  - [ ] date.h
+  - [ ] defs.h
+  - [ ] elf.h
+  - [ ] entry.S
+  - [ ] exec.c
+  - [ ] fcntl.h
+  - [ ] file.c
+  - [ ] file.h
+  - [ ] fs.c
+  - [ ] fs.h
+  - [ ] kalloc.c
+  - [ ] kernel.ld
+  - [ ] kernelvec.S
+  - [ ] log.c
+  - [ ] main.c
+  - [ ] memlayout.h
+  - [ ] param.h
+  - [ ] pipe.c
+  - [ ] plic.c
+  - [ ] printf.c
+  - [ ] proc.c
+  - [ ] proc.h
+  - [ ] ramdisk.c
+  - [ ] riscv.h
+  - [ ] sleeplock.c
+  - [ ] sleeplock.h
+  - [ ] spinlock.c
+  - [ ] spinlock.h
+  - [x] start.c
+  - [ ] stat.h
+  - [ ] string.c
+  - [ ] swtch.S
+  - [ ] syscall.c
+  - [ ] syscall.h
+  - [ ] sysfile.c
+  - [ ] sysproc.c
+  - [ ] trampoline.S
+  - [ ] trap.c
+  - [ ] types.h
+  - [ ] uart.c
+  - [ ] virtio.h
+  - [ ] virtio_disk.c
+  - [ ] vm.c
+- ../../xv6-riscv//mkfs:
+  - [ ] mkfs.c
+- ../../xv6-riscv//user:
+  - [ ] cat.c
+  - [ ] echo.c
+  - [ ] forktest.c
+  - [ ] grep.c
+  - [ ] grind.c
+  - [ ] init.c
+  - [ ] initcode.S
+  - [ ] kill.c
+  - [ ] ln.c
+  - [ ] ls.c
+  - [ ] mkdir.c
+  - [ ] printf.c
+  - [ ] rm.c
+  - [ ] sh.c
+  - [ ] stressfs.c
+  - [ ] ulib.c
+  - [ ] umalloc.c
+  - [ ] user.h
+  - [ ] usertests.c
+  - [ ] usys.pl
+  - [ ] wc.c
+  - [ ] zombie.c
