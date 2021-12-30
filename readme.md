@@ -28,7 +28,7 @@
   - [ ] date.h
   - [ ] defs.h
   - [ ] elf.h
-  - [ ] entry.S
+  - [x] entry.S
   - [ ] exec.c
   - [ ] fcntl.h
   - [ ] file.c
@@ -56,7 +56,7 @@
   - [x] start.c
   - [ ] stat.h
   - [ ] string.c
-  - [ ] swtch.S
+  - [x] swtch.S
   - [ ] syscall.c
   - [ ] syscall.h
   - [ ] sysfile.c

@@ -18,6 +18,7 @@ pub fn build(b: *std.build.Builder) void {
     const kernel = b.addExecutable("valtos.elf", "src/kernel/start.zig");
     kernel.addAssemblyFile("src/kernel/entry.s");
     kernel.addAssemblyFile("src/kernel/kernelvec.s");
+    kernel.addAssemblyFile("src/kernel/swtch.s");
     kernel.addAssemblyFile("src/kernel/trampoline.s");
     kernel.setTarget(target);
     kernel.setBuildMode(buildMode);
