@@ -21,6 +21,8 @@
 - [Code Models](https://www.sifive.com/blog/all-aboard-part-4-risc-v-code-models)
 
 ## TODO
+- General
+  - Compare time, binary size, LoC when building zig xv6 vs c xv6
 - ../../xv6-riscv//kernel:
   - [ ] bio.c
   - [ ] buf.h
@@ -41,7 +43,7 @@
   - [ ] log.c
   - [ ] main.c
   - [ ] memlayout.h
-  - [ ] param.h
+  - [x] param.h
   - [ ] pipe.c
   - [ ] plic.c
   - [ ] printf.c
