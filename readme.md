@@ -26,7 +26,7 @@
 - ../../xv6-riscv//kernel:
   - [ ] bio.c
   - [ ] buf.h
-  - [ ] console.c
+  - [x] console.c
   - [ ] date.h
   - [ ] defs.h
   - [ ] elf.h
@@ -46,15 +46,15 @@
   - [x] param.h
   - [ ] pipe.c
   - [ ] plic.c
-  - [ ] printf.c
-  - [ ] proc.c
+  - [x] printf.c
+  - [ ] proc.c (either_copyin, either_copyout)
   - [ ] proc.h
   - [ ] ramdisk.c
   - [ ] riscv.h
   - [ ] sleeplock.c
   - [ ] sleeplock.h
-  - [ ] spinlock.c
-  - [ ] spinlock.h
+  - [x] spinlock.c
+  - [x] spinlock.h
   - [x] start.c
   - [ ] stat.h
   - [ ] string.c
@@ -66,7 +66,7 @@
   - [x] trampoline.S
   - [ ] trap.c
   - [ ] types.h
-  - [ ] uart.c
+  - [x] uart.c
   - [ ] virtio.h
   - [ ] virtio_disk.c
   - [ ] vm.c

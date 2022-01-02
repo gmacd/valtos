@@ -156,13 +156,12 @@ pub fn uartstart() void {
 }
 
 // read one input character from the UART.
-// return -1 if none is waiting.
-pub fn uartgetc() i32 {
+pub fn uartgetc() ?u8 {
     if (readReg(LSR) & 0x01) {
         // input data is ready.
         return readReg(RHR);
     } else {
-        return -1;
+        return null;
     }
 }
 
@@ -172,10 +171,7 @@ pub fn uartgetc() i32 {
 pub fn uartintr() void {
     // read and process incoming characters.
     while (true) {
-        const c = uartgetc();
-        if (c == -1) {
-            break;
-        }
+        const c = uartgetc() orelse break;
         console.consoleintr(c);
     }
 

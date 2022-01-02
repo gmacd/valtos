@@ -694,20 +694,20 @@ pub fn wakeup(chan: *anyopaque) void {
 //   return -1;
 // }
 
-// // Copy to either a user address, or kernel address,
-// // depending on usr_dst.
-// // Returns 0 on success, -1 on error.
-// int
-// either_copyout(int user_dst, uint64 dst, void *src, uint64 len)
-// {
-//   struct proc *p = myproc();
-//   if(user_dst){
-//     return copyout(p->pagetable, dst, src, len);
-//   } else {
-//     memmove((char *)dst, src, len);
-//     return 0;
-//   }
-// }
+// Copy to either a user address, or kernel address,
+// depending on usr_dst.
+// Returns 0 on success, -1 on error.
+pub fn either_copyout(user_dst: i32, dst: u64, src: *u8, len: u64) i32 {
+  //var p = myproc();
+  if (user_dst > 0) {
+    // return copyout(p->pagetable, dst, src, len);
+    // TODO
+    return 0;
+  } else {
+    _ = string.memmove(@intToPtr(*u8, dst), src, len);
+    return 0;
+  }
+}
 
 // Copy from either a user address, or kernel address,
 // depending on usr_src.
@@ -724,31 +724,15 @@ pub fn either_copyin(dst: *u8, user_src: i32, src: u64, len: u64) i32 {
     }
 }
 
-// // Print a process listing to console.  For debugging.
-// // Runs when user types ^P on console.
-// // No lock to avoid wedging a stuck machine further.
-// void
-// procdump(void)
-// {
-//   static char *states[] = {
-//   [UNUSED]    "unused",
-//   [SLEEPING]  "sleep ",
-//   [RUNNABLE]  "runble",
-//   [RUNNING]   "run   ",
-//   [ZOMBIE]    "zombie"
-//   };
-//   struct proc *p;
-//   char *state;
-
-//   printf("\n");
-//   for(p = proc; p < &proc[NPROC]; p++){
-//     if(p->state == UNUSED)
-//       continue;
-//     if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
-//       state = states[p->state];
-//     else
-//       state = "???";
-//     printf("%d %s %s", p->pid, state, p->name);
-//     printf("\n");
-//   }
-// }
+// Print a process listing to console.  For debugging.
+// Runs when user types ^P on console.
+// No lock to avoid wedging a stuck machine further.
+pub fn procdump() void {
+    printf.printf("\n", .{});
+    for (proc) |*p| {
+        if (p.state == .UNUSED) {
+            continue;
+        }
+        printf.printf("%d %s %s\n", .{ p.pid, @tagName(p.state), p.name });
+    }
+}

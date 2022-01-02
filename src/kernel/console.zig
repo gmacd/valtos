@@ -2,11 +2,15 @@ const std = @import("std");
 const mem = std.mem;
 
 const file = @import("file.zig");
+const printf = @import("printf.zig");
 const proc = @import("proc.zig");
 const spinlock = @import("spinlock.zig");
 const uart = @import("uart.zig");
 
-// #define C(x)  ((x)-'@')  // Control-x
+// Control-x
+fn ctrl(x: u8) u8 {
+    return x - '@';
+}
 
 //
 // send one character to the uart.
@@ -24,19 +28,17 @@ fn consputbackspace() void {
     uart.uartputc_sync('\x08');
 }
 
+const INPUT_BUF = 128;
 pub const Console = struct {
     lock: spinlock.Spinlock = .{},
 
     // input
-    buf: [128]u8 = [_]u8{0} ** 128,
+    buf: [INPUT_BUF]u8 = [_]u8{0} ** INPUT_BUF,
     r: u32 = 0, // Read index
     w: u32 = 0, // Write index
     e: u32 = 0, // Edit index
 };
-var cons = Console{
-    //    .lock = spinlock.Spinlock{},
-    //    .buf = [_]u8{0}**128,
-};
+var cons = Console{};
 
 //
 // user write()s to the console go here.
@@ -61,105 +63,109 @@ pub fn consolewrite(user_src: i32, src: u64, n: i32) i32 {
 // user_dist indicates whether dst is a user
 // or kernel address.
 //
-// pub fn consoleread(user_dst: i32, dst: u64, n: i32) i32 {
-//   uint target;
-//   int c;
-//   char cbuf;
+pub fn consoleread(user_dst: i32, dst: u64, n: i32) i32 {
+    var target = n;
+    var currn = n;
+    var currdst = dst;
+    spinlock.acquire(&cons.lock);
+    while (currn > 0) {
+        // wait until interrupt handler has put some
+        // input into cons.buffer.
+        while (cons.r == cons.w) {
+            var p = proc.myproc() orelse {
+                printf.panic("no proc");
+                return -1;
+            };
+            if (p.killed) {
+                spinlock.release(&cons.lock);
+                return -1;
+            }
+            proc.sleep(&cons.r, &cons.lock);
+        }
 
-//   target = n;
-//   acquire(&cons.lock);
-//   while(n > 0){
-//     // wait until interrupt handler has put some
-//     // input into cons.buffer.
-//     while(cons.r == cons.w){
-//       if(myproc()->killed){
-//         release(&cons.lock);
-//         return -1;
-//       }
-//       sleep(&cons.r, &cons.lock);
-//     }
+        var c = cons.buf[cons.r % INPUT_BUF];
+        cons.r += 1;
 
-//     c = cons.buf[cons.r++ % INPUT_BUF];
+        if (c == ctrl('D')) { // end-of-file
+            if (currn < target) {
+                // Save ^D for next time, to make sure
+                // caller gets a 0-byte result.
+                cons.r -= 1;
+            }
+            break;
+        }
 
-//     if(c == C('D')){  // end-of-file
-//       if(n < target){
-//         // Save ^D for next time, to make sure
-//         // caller gets a 0-byte result.
-//         cons.r--;
-//       }
-//       break;
-//     }
+        // copy the input byte to the user-space buffer.
+        var cbuf = c;
+        if (proc.either_copyout(user_dst, currdst, &cbuf, 1) == -1) {
+            break;
+        }
 
-//     // copy the input byte to the user-space buffer.
-//     cbuf = c;
-//     if(either_copyout(user_dst, dst, &cbuf, 1) == -1)
-//       break;
+        currdst += 1;
+        currn -= 1;
 
-//     dst++;
-//     --n;
+        if (c == '\n') {
+            // a whole line has arrived, return to
+            // the user-level read().
+            break;
+        }
+    }
+    spinlock.release(&cons.lock);
 
-//     if(c == '\n'){
-//       // a whole line has arrived, return to
-//       // the user-level read().
-//       break;
-//     }
-//   }
-//   release(&cons.lock);
+    return target - currn;
+}
 
-//   return target - n;
-// }
+//
+// the console input interrupt handler.
+// uartintr() calls this for input character.
+// do erase/kill processing, append to cons.buf,
+// wake up consoleread() if a whole line has arrived.
+//
+pub fn consoleintr(c: u8) void {
+    spinlock.acquire(&cons.lock);
 
-// //
-// // the console input interrupt handler.
-// // uartintr() calls this for input character.
-// // do erase/kill processing, append to cons.buf,
-// // wake up consoleread() if a whole line has arrived.
-// //
-// void
-// consoleintr(int c)
-// {
-//   acquire(&cons.lock);
+    switch (c) {
+        ctrl('P') => {
+            // Print process list.
+            proc.procdump();
+        },
+        ctrl('U') => {
+            // Kill line.
+            while ((cons.e != cons.w) and (cons.buf[(cons.e - 1) % INPUT_BUF] != '\n')) {
+                cons.e -= 1;
+                consputbackspace();
+            }
+        },
+        ctrl('H') | '\x7f' => {
+            // Backspace
+            if (cons.e != cons.w) {
+                cons.e -= 1;
+                consputbackspace();
+            }
+        },
+        else => {
+            if ((c != 0) and (cons.e - cons.r < INPUT_BUF)) {
+                c = if (c == '\r') '\n' else c;
 
-//   switch(c){
-//   case C('P'):  // Print process list.
-//     procdump();
-//     break;
-//   case C('U'):  // Kill line.
-//     while(cons.e != cons.w &&
-//           cons.buf[(cons.e-1) % INPUT_BUF] != '\n'){
-//       cons.e--;
-//       consputbackspace();
-//     }
-//     break;
-//   case C('H'): // Backspace
-//   case '\x7f':
-//     if(cons.e != cons.w){
-//       cons.e--;
-//       consputbackspace();
-//     }
-//     break;
-//   default:
-//     if(c != 0 && cons.e-cons.r < INPUT_BUF){
-//       c = (c == '\r') ? '\n' : c;
+                // echo back to the user.
+                consputc(c);
 
-//       // echo back to the user.
-//       consputc(c);
+                // store for consumption by consoleread().
+                cons.buf[cons.e % INPUT_BUF] = c;
+                cons.e += 1;
 
-//       // store for consumption by consoleread().
-//       cons.buf[cons.e++ % INPUT_BUF] = c;
+                if ((c == '\n') or (c == ctrl('D')) or (cons.e == cons.r + INPUT_BUF)) {
+                    // wake up consoleread() if a whole line (or end-of-file)
+                    // has arrived.
+                    cons.w = cons.e;
+                    proc.wakeup(&cons.r);
+                }
+            }
+        },
+    }
 
-//       if(c == '\n' || c == C('D') || cons.e == cons.r+INPUT_BUF){
-//         // wake up consoleread() if a whole line (or end-of-file)
-//         // has arrived.
-//         cons.w = cons.e;
-//         wakeup(&cons.r);
-//       }
-//     }
-//     break;
-//   }
-
-//   release(&cons.lock);
-// }
+    spinlock.release(&cons.lock);
+}
 
 pub fn consoleinit() void {
     spinlock.initlock(&cons.lock, "cons");
@@ -168,6 +174,6 @@ pub fn consoleinit() void {
 
     // connect read and write system calls
     // to consoleread and consolewrite.
-    //file.devsw[file.CONSOLE].read = consoleread;
+    file.devsw[file.CONSOLE].read = consoleread;
     file.devsw[file.CONSOLE].write = consolewrite;
 }
