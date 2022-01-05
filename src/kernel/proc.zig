@@ -170,7 +170,7 @@ var proc: [param.NPROC]Proc = std.mem.zeroes([param.NPROC]Proc);
 // to prevent race with process being moved
 // to a different CPU.
 pub fn cpuid() u64 {
-    return riscv.r_tp();
+    return riscv.readTp();
 }
 
 // Return this CPU's cpu struct.

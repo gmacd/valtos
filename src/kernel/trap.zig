@@ -127,9 +127,9 @@ const riscv = @import("riscv.zig");
 // interrupts and exceptions from kernel code go here via kernelvec,
 // on whatever the current kernel stack is.
 export fn kerneltrap() void {
-    const sepc = riscv.r_sepc();
-    const sstatus = riscv.r_sstatus();
-    const scause = riscv.r_scause();
+    const sepc = riscv.readReg(.sepc);
+    const sstatus = riscv.readReg(.sstatus);
+    const scause = riscv.readReg(.scause);
 
     if ((sstatus & riscv.SSTATUS_SPP) == 0) {
         printf.panic("kerneltrap: not from supervisor mode");
@@ -142,7 +142,7 @@ export fn kerneltrap() void {
     if (which_dev == 0) {
         printf.panic("panic! TODO! ^^^"); // TODO remove
         printf.printf("scause %p\n", .{scause});
-        printf.printf("sepc=%p stval=%p\n", .{riscv.r_sepc(), riscv.r_stval()});
+        printf.printf("sepc=%p stval=%p\n", .{riscv.readReg(.sepc), riscv.readReg(.stval)});
         printf.panic("kerneltrap");
     }
 
@@ -153,8 +153,8 @@ export fn kerneltrap() void {
 
     // the yield() may have caused some traps to occur,
     // so restore trap registers for use by kernelvec.S's sepc instruction.
-    riscv.w_sepc(sepc);
-    riscv.w_sstatus(sstatus);
+    riscv.writeReg(.sepc, sepc);
+    riscv.writeReg(.sstatus, sstatus);
 }
 
 // void

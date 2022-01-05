@@ -35,7 +35,7 @@ pub fn acquire(lk: *Spinlock) void {
     //}
 
     // TODO verify
-    while (!@atomicRmw(bool, &lk.locked, .Xchg, true, .SeqCst)) {
+    while (@atomicRmw(bool, &lk.locked, .Xchg, true, .SeqCst)) {
     }
 
     // Tell the C compiler and the processor to not move loads or stores

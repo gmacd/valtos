@@ -21,34 +21,34 @@ extern fn timervec() void;
 // entry.s jumps here in machine mode on stack0.
 export fn start() void {
     // set M Previous Privilege mode to Supervisor, for mret.
-    var x = riscv.r_mstatus();
+    var x = riscv.readReg(.mstatus);
     x &= ~riscv.MSTATUS_MPP_MASK;
     x |= riscv.MSTATUS_MPP_S;
-    riscv.w_mstatus(x);
+    riscv.writeReg(.mstatus, x);
 
     // set M Exception Program Counter to main, for mret.
     // requires gcc -mcmodel=medany
-    riscv.w_mepc(@ptrToInt(main));
+    riscv.writeReg(.mepc, @ptrToInt(main));
 
     // disable paging for now.
-    riscv.w_satp(0);
+    riscv.writeReg(.satp, 0);
 
     // delegate all interrupts and exceptions to supervisor mode.
-    riscv.w_medeleg(0xffff);
-    riscv.w_mideleg(0xffff);
-    riscv.w_sie(riscv.r_sie() | riscv.SIE_SEIE | riscv.SIE_STIE | riscv.SIE_SSIE);
+    riscv.writeReg(.medeleg, 0xffff);
+    riscv.writeReg(.mideleg, 0xffff);
+    riscv.writeReg(.sie, riscv.readReg(.sie) | riscv.SIE_SEIE | riscv.SIE_STIE | riscv.SIE_SSIE);
 
     // configure Physical Memory Protection to give supervisor mode
     // access to all of physical memory.
-    riscv.w_pmpaddr0(0x3fffffffffffff);
-    riscv.w_pmpcfg0(0xf);
+    riscv.writeReg(.pmpaddr0, 0x3fffffffffffff);
+    riscv.writeReg(.pmpcfg0, 0xf);
 
     // ask for clock interrupts.
     timerinit();
 
     // keep each CPU's hartid in its tp register, for cpuid().
-    const id = riscv.r_mhartid();
-    riscv.w_tp(id);
+    const id = riscv.readReg(.mhartid);
+    riscv.writeTp(id);
 
     // switch to supervisor mode and jump to main().
     asm volatile("mret");
@@ -60,7 +60,7 @@ export fn start() void {
 // devintr() in trap.c.
 fn timerinit() void {
     // each CPU has a separate source of timer interrupts.
-    const id = riscv.r_mhartid();
+    const id = riscv.readReg(.mhartid);
 
     // ask the CLINT for a timer interrupt.
     const interval = 1000000; // cycles; about 1/10th second in qemu.
@@ -76,18 +76,14 @@ fn timerinit() void {
     scratch[3] = @ptrToInt(memlayout.clintmtimecmp(id));
     //scratch[4] = interval;
     scratch[4] = interval;
-    riscv.w_mscratch(@ptrToInt(scratch));
+    riscv.writeReg(.mscratch, @ptrToInt(scratch));
 
     // set the machine-mode trap handler.
-    riscv.w_mtvec(@ptrToInt(timervec));
+    riscv.writeReg(.mtvec, @ptrToInt(timervec));
 
     // enable machine-mode interrupts.
-    riscv.w_mstatus(riscv.r_mstatus() | riscv.MSTATUS_MIE);
+    riscv.writeReg(.mstatus, riscv.readReg(.mstatus) | riscv.MSTATUS_MIE);
 
     // enable machine-mode timer interrupts.
-    riscv.w_mie(riscv.r_mie() | riscv.MIE_MTIE);
-}
-
-test "basic test" {
-    try std.testing.expectEqual(10, 3 + 7);
+    riscv.writeReg(.mie, riscv.readReg(.mie) | riscv.MIE_MTIE);
 }

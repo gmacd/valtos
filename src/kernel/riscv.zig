@@ -1,278 +1,145 @@
-// which hart (core) is this?
-pub fn r_mhartid() u64 {
-    // Need to check - not sure about this inline asm, though it seems to work
-    var x: u64 = 0;
-    asm volatile("csrr %[in], mhartid" : : [in] "r" (x));
-    return x;
+pub const Register = enum {
+    mcounteren, // machine-mode counter-enable
+    medeleg,
+    mepc,
+    mhartid,
+    mideleg,
+    mie,
+    mscratch,
+    mstatus,
+    mtvec, // machine-mode interrupt vector
+    pmpaddr0,
+    pmpcfg0,
+    satp, // supervisor address translation and protection, holds the address of the page table
+    scause, // supervisor trap cause
+    sepc, // supervisor exception program counter, holds the exception return instruction
+    sie,
+    sip,
+    sscratch, // supervisor scratch register, for early trap handler in trampoline.S
+    sstatus,
+    stval, // supervisor trap value
+    stvec, // supervisor trap-vector base address
+    time, // machine-mode cycle counter
+};
+
+pub inline fn readReg(comptime r: Register) u64 {
+    return asm volatile ("csrr %[ret], " ++ @tagName(r)
+        : [ret] "=r" (-> u64),
+    );
+}
+
+pub inline fn writeReg(comptime r: Register, value: u64) void {
+    asm volatile ("csrw " ++ @tagName(r) ++ ", %[value]"
+        :
+        : [value] "r" (value),
+        : "memory"
+    );
+}
+
+// reg = oldreg | value
+pub inline fn orReg(comptime r: Register, value: u64) void {
+    asm volatile ("csrs " ++ @tagName(r) ++ ", %[value]"
+        :
+        : [value] "r" (value),
+        : "memory"
+    );
+}
+
+// reg = oldreg & ~value
+pub inline fn clearReg(comptime r: Register, value: u64) void {
+    asm volatile ("csrc " ++ @tagName(r) ++ ", %[value]"
+        :
+        : [value] "r" (value),
+        : "memory"
+    );
 }
 
 // Machine Status Register, mstatus
-
 pub const MSTATUS_MPP_MASK: u64 = (3 << 11); // previous mode.
 pub const MSTATUS_MPP_M: u64 = (3 << 11);
 pub const MSTATUS_MPP_S: u64 = (1 << 11);
 pub const MSTATUS_MPP_U: u64 = (0 << 11);
-pub const MSTATUS_MIE: u64 = (1 << 3);       // machine-mode interrupt enable.
-
-pub fn r_mstatus() u64 {
-    // Need to check - not sure about this inline asm, though it seems to work
-    var x: u64 = 0;
-    asm volatile("csrr %[in], mstatus" : : [in] "r" (x));
-    return x;
-}
-
-pub fn w_mstatus(x: u64) void {
-    asm volatile("csrw mstatus, %[in]" : : [in] "r" (x));
-}
-
-// machine exception program counter, holds the
-// instruction address to which a return from
-// exception will go.
-pub fn w_mepc(x: u64) void {
-    asm volatile("csrw mepc, %[in]" : : [in] "r" (x));
-}
+pub const MSTATUS_MIE: u64 = (1 << 3); // machine-mode interrupt enable.
 
 // Supervisor Status Register, sstatus
-
-pub const SSTATUS_SPP: u64 = (1 << 8);  // Previous mode, 1=Supervisor, 0=User
+pub const SSTATUS_SPP: u64 = (1 << 8); // Previous mode, 1=Supervisor, 0=User
 pub const SSTATUS_SPIE: u64 = (1 << 5); // Supervisor Previous Interrupt Enable
 pub const SSTATUS_UPIE: u64 = (1 << 4); // User Previous Interrupt Enable
-pub const SSTATUS_SIE: u64 = (1 << 1);  // Supervisor Interrupt Enable
-pub const SSTATUS_UIE: u64 = (1 << 0);  // User Interrupt Enable
-
-pub fn r_sstatus() u64 {
-    // Need to check - not sure about this inline asm, though it seems to work
-    var x: u64 = 0;
-    asm volatile("csrr %[in], sstatus" : : [in] "r" (x));
-    return x;
-}
-
-pub fn w_sstatus(x: u64) void {
-    asm volatile("csrw sstatus, %[in]" : : [in] "r" (x));
-}
-
-pub fn w_sip(x: u64) void {
-    asm volatile("csrw sip, %[in]" : : [in] "r" (x));
-}
+pub const SSTATUS_SIE: u64 = (1 << 1); // Supervisor Interrupt Enable
+pub const SSTATUS_UIE: u64 = (1 << 0); // User Interrupt Enable
 
 // Supervisor Interrupt Enable
 pub const SIE_SEIE: u64 = (1 << 9); // external
 pub const SIE_STIE: u64 = (1 << 5); // timer
 pub const SIE_SSIE: u64 = (1 << 1); // software
 
-pub fn r_sie() u64 {
-    // Need to check - not sure about this inline asm, though it seems to work
-    var x: u64 = 0;
-    asm volatile("csrr %[in], sie" : : [in] "r" (x));
-    return x;
-}
-
-pub fn w_sie(x: u64) void {
-    asm volatile("csrw sie, %[in]" : : [in] "r" (x));
-}
-
 // Machine-mode Interrupt Enable
 pub const MIE_MEIE: u64 = (1 << 11); // external
-pub const MIE_MTIE: u64 = (1 << 7);  // timer
-pub const MIE_MSIE: u64 = (1 << 3);  // software
-pub fn r_mie() u64 {
-    // Need to check - not sure about this inline asm, though it seems to work
-    var x: u64 = 0;
-    asm volatile("csrr %[in], mie" : : [in] "r" (x));
-    return x;
-}
+pub const MIE_MTIE: u64 = (1 << 7); // timer
+pub const MIE_MSIE: u64 = (1 << 3); // software
 
-pub fn w_mie(x: u64) void {
-    asm volatile("csrw mie, %[in]" : : [in] "r" (x));
-}
-
-// supervisor exception program counter, holds the
-// instruction address to which a return from
-// exception will go.
-pub fn w_sepc(x: u64) void {
-    asm volatile("csrw sepc, %[in]" : : [in] "r" (x));
-}
-
-pub fn r_sepc() u64 {
-    // Need to check - not sure about this inline asm, though it seems to work
-    var x: u64 = 0;
-    asm volatile("csrr %[in], sepc" : : [in] "r" (x));
-    return x;
-}
-
-// // Machine Exception Delegation
-// static inline uint64
-// r_medeleg()
-// {
-//   uint64 x;
-//   asm volatile("csrr %0, medeleg" : "=r" (x) );
-//   return x;
-// }
-
-pub fn w_medeleg(x: u64) void {
-    asm volatile("csrw medeleg, %[in]" : : [in] "r" (x));
-}
-
-// // Machine Interrupt Delegation
-// static inline uint64
-// r_mideleg()
-// {
-//   uint64 x;
-//   asm volatile("csrr %0, mideleg" : "=r" (x) );
-//   return x;
-// }
-
-pub fn w_mideleg(x: u64) void {
-    asm volatile("csrw mideleg, %[in]" : : [in] "r" (x));
-}
-
-// Supervisor Trap-Vector Base Address
-// low two bits are mode.
-pub fn w_stvec(x: u64) void {
-    asm volatile("csrw stvec, %[in]" : : [in] "r" (x));
-}
-
-pub fn r_stvec() u64 {
-    // Need to check - not sure about this inline asm, though it seems to work
-    var x: u64 = 0;
-    asm volatile("csrr %[in], stvec" : : [in] "r" (x));
-    return x;
-}
-
-// Machine-mode interrupt vector
-pub fn w_mtvec(x: u64) void {
-    asm volatile("csrw mtvec, %[in]" : : [in] "r" (x));
-}
-
-pub fn w_pmpcfg0(x: u64) void {
-    asm volatile("csrw pmpcfg0, %[in]" : : [in] "r" (x));
-}
-
-pub fn w_pmpaddr0(x: u64) void {
-    asm volatile("csrw pmpaddr0, %[in]" : : [in] "r" (x));
-}
-
-// // use riscv's sv39 page table scheme.
-// #define SATP_SV39 (8L << 60)
+// use riscv's sv39 page table scheme.
+const SATP_SV39: u64 = (8 << 60);
 
 // #define MAKE_SATP(pagetable) (SATP_SV39 | (((uint64)pagetable) >> 12))
 
-// supervisor address translation and protection;
-// holds the address of the page table.
-pub fn w_satp(x: u64) void {
-    asm volatile("csrw satp, %[in]" : : [in] "r" (x));
-}
-
-// static inline uint64
-// r_satp()
-// {
-//   uint64 x;
-//   asm volatile("csrr %0, satp" : "=r" (x) );
-//   return x;
-// }
-
-// Supervisor Scratch register, for early trap handler in trampoline.S.
-pub fn w_sscratch(x: u64) void {
-    asm volatile("csrw sscratch, %[in]" : : [in] "r" (x));
-}
-
-pub fn w_mscratch(x: u64) void {
-    asm volatile("csrw mscratch, %[in]" : : [in] "r" (x));
-}
-
-// Supervisor Trap Cause
-pub fn r_scause() u64 {
-    // Need to check - not sure about this inline asm, though it seems to work
-    var x: u64 = 0;
-    asm volatile("csrr %[in], scause" : : [in] "r" (x));
-    return x;
-}
-
-// // Supervisor Trap Value
-pub fn r_stval() u64 {
-    // Need to check - not sure about this inline asm, though it seems to work
-    var x: u64 = 0;
-    asm volatile("csrr %[in], stval" : : [in] "r" (x));
-    return x;
-}
-
-// // Machine-mode Counter-Enable
-// static inline void 
-// w_mcounteren(uint64 x)
-// {
-//   asm volatile("csrw mcounteren, %0" : : "r" (x));
-// }
-
-// static inline uint64
-// r_mcounteren()
-// {
-//   uint64 x;
-//   asm volatile("csrr %0, mcounteren" : "=r" (x) );
-//   return x;
-// }
-
-// // machine-mode cycle counter
-// static inline uint64
-// r_time()
-// {
-//   uint64 x;
-//   asm volatile("csrr %0, time" : "=r" (x) );
-//   return x;
-// }
-
 // enable device interrupts
-pub fn intr_on() void {
-    w_sstatus(r_sstatus() | SSTATUS_SIE);
+pub inline fn intr_on() void {
+    orReg(.sstatus, SSTATUS_SIE);
 }
 
 // disable device interrupts
-pub fn intr_off() void {
-    w_sstatus(r_sstatus() & ~SSTATUS_SIE);
+pub inline fn intr_off() void {
+    clearReg(.sstatus, SSTATUS_SIE);
 }
 
 // are device interrupts enabled?
-pub fn intr_get() bool {
-    var x = r_sstatus();
+pub inline fn intr_get() bool {
+    var x = readReg(.sstatus);
     return (x & SSTATUS_SIE) != 0;
 }
 
-// static inline uint64
-// r_sp()
-// {
-//   uint64 x;
-//   asm volatile("mv %0, sp" : "=r" (x) );
-//   return x;
-// }
+pub inline fn readSp() u64 {
+    return asm volatile ("mv %[ret], sp"
+        : [ret] "=r" (-> u64),
+    );
+}
+
+pub inline fn writeSp(value: u64) void {
+    asm volatile ("mv sp, %[value]"
+        :
+        : [value] "r" (value),
+        : "memory"
+    );
+}
 
 // read and write tp, the thread pointer, which holds
 // this core's hartid (core number), the index into cpus[].
-pub fn r_tp() u64 {
-    // Need to check - not sure about this inline asm, though it seems to work
-    var x: u64 = 0;
-    asm volatile("mv %[in], tp" : : [in] "r" (x));
-    return x;
+pub inline fn readTp() u64 {
+    return asm volatile ("mv %[ret], tp"
+        : [ret] "=r" (-> u64),
+    );
 }
 
-pub fn w_tp(x: u64) void {
-    asm volatile("mv tp, %[in]" : : [in] "r" (x));
+pub inline fn writeTp(value: u64) void {
+    asm volatile ("mv tp, %[value]"
+        :
+        : [value] "r" (value),
+        : "memory"
+    );
 }
 
-// static inline uint64
-// r_ra()
-// {
-//   uint64 x;
-//   asm volatile("mv %0, ra" : "=r" (x) );
-//   return x;
-// }
+pub inline fn readRa() u64 {
+    return asm volatile ("mv %[ret], ra"
+        : [ret] "=r" (-> u64),
+    );
+}
 
-// // flush the TLB.
-// static inline void
-// sfence_vma()
-// {
-//   // the zero, zero means flush all TLB entries.
-//   asm volatile("sfence.vma zero, zero");
-// }
-
+// flush the TLB.
+pub inline fn sfenceVma() void {
+    // the zero, zero means flush all TLB entries.
+    asm volatile ("sfence.vma zero, zero");
+}
 
 // #define PGSIZE 4096 // bytes per page
 // #define PGSHIFT 12  // bits of offset within a page
