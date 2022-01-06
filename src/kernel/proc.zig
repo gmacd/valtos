@@ -697,14 +697,14 @@ pub fn wakeup(chan: *anyopaque) void {
 // Copy to either a user address, or kernel address,
 // depending on usr_dst.
 // Returns 0 on success, -1 on error.
-pub fn either_copyout(user_dst: i32, dst: u64, src: *u8, len: u64) i32 {
+pub fn either_copyout(user_dst: i32, dst: u64, src: [*]u8, len: u64) i32 {
   //var p = myproc();
   if (user_dst > 0) {
     // return copyout(p->pagetable, dst, src, len);
     // TODO
     return 0;
   } else {
-    _ = string.memmove(@intToPtr(*u8, dst), src, len);
+    _ = string.memmove(@intToPtr([*]u8, dst), src, len);
     return 0;
   }
 }
@@ -712,14 +712,14 @@ pub fn either_copyout(user_dst: i32, dst: u64, src: *u8, len: u64) i32 {
 // Copy from either a user address, or kernel address,
 // depending on usr_src.
 // Returns 0 on success, -1 on error.
-pub fn either_copyin(dst: *u8, user_src: i32, src: u64, len: u64) i32 {
+pub fn either_copyin(dst: [*]u8, user_src: i32, src: u64, len: u64) i32 {
     //var p = myproc();
     if (user_src > 0) {
         //return copyin(p.pagetable, dst, src, len);
         // TODO
         return 0;
     } else {
-        _ = string.memmove(dst, @intToPtr(*u8, src), len);
+        _ = string.memmove(dst, @intToPtr([*]u8, src), len);
         return 0;
     }
 }

@@ -1,13 +1,10 @@
-// void*
-// memset(void *dst, int c, uint n)
-// {
-//   char *cdst = (char *) dst;
-//   int i;
-//   for(i = 0; i < n; i++){
-//     cdst[i] = c;
-//   }
-//   return dst;
-// }
+pub fn memset(dst: [*]u8, c: u8, n: u64) [*]u8 {
+    var i: u64 = 0;
+    while (i < n) : (i += 1) {
+        dst[i] = c;
+    }
+    return dst;
+}
 
 // int
 // memcmp(const void *v1, const void *v2, uint n)
@@ -25,7 +22,7 @@
 //   return 0;
 // }
 
-pub fn memmove(dst: *u8, src: *u8, n: u64) *u8 {
+pub fn memmove(dst: [*]u8, src: [*]u8, n: u64) [*]u8 {
     if (n == 0) {
         return dst;
     }

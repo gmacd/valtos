@@ -28,7 +28,7 @@
   - [ ] buf.h
   - [x] console.c
   - [ ] date.h
-  - [ ] defs.h
+  - [x] defs.h
   - [ ] elf.h
   - [x] entry.S
   - [ ] exec.c
@@ -37,7 +37,7 @@
   - [ ] file.h
   - [ ] fs.c
   - [ ] fs.h
-  - [ ] kalloc.c
+  - [x] kalloc.c
   - [x] kernel.ld
   - [x] kernelvec.S
   - [ ] log.c

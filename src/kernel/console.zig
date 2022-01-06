@@ -47,11 +47,11 @@ pub fn consolewrite(user_src: i32, src: u64, n: i32) i32 {
     var i: i32 = 0;
 
     while (i < n) : (i += 1) {
-        var c: u8 = 0;
+        var c: [1]u8 = [1]u8{0};
         if (proc.either_copyin(&c, user_src, src + @intCast(u64, i), 1) == -1) {
             break;
         }
-        uart.uartputc(c);
+        uart.uartputc(c[0]);
     }
 
     return i;
@@ -83,10 +83,10 @@ pub fn consoleread(user_dst: i32, dst: u64, n: i32) i32 {
             proc.sleep(&cons.r, &cons.lock);
         }
 
-        var c = cons.buf[cons.r % INPUT_BUF];
+        var c = cons.buf[(cons.r % INPUT_BUF)..];
         cons.r += 1;
 
-        if (c == ctrl('D')) { // end-of-file
+        if (c[0] == ctrl('D')) { // end-of-file
             if (currn < target) {
                 // Save ^D for next time, to make sure
                 // caller gets a 0-byte result.
@@ -97,14 +97,14 @@ pub fn consoleread(user_dst: i32, dst: u64, n: i32) i32 {
 
         // copy the input byte to the user-space buffer.
         var cbuf = c;
-        if (proc.either_copyout(user_dst, currdst, &cbuf, 1) == -1) {
+        if (proc.either_copyout(user_dst, currdst, cbuf.ptr, 1) == -1) {
             break;
         }
 
         currdst += 1;
         currn -= 1;
 
-        if (c == '\n') {
+        if (c[0] == '\n') {
             // a whole line has arrived, return to
             // the user-level read().
             break;
