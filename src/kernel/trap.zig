@@ -1,29 +1,26 @@
 const printf = @import("printf.zig");
 const proc = @import("proc.zig");
 const riscv = @import("riscv.zig");
+const spinlock = @import("spinlock.zig");
 
-// struct spinlock tickslock;
+var tickslock: spinlock.Spinlock = .{};
 // uint ticks;
 
 // extern char trampoline[], uservec[], userret[];
 
-// // in kernelvec.S, calls kerneltrap().
-// void kernelvec();
+// in kernelvec.S, calls kerneltrap().
+extern fn kernelvec() void;
 
 // extern int devintr();
 
-// void
-// trapinit(void)
-// {
-//   initlock(&tickslock, "time");
-// }
+pub fn trapinit() void {
+  spinlock.initlock(&tickslock, "time");
+}
 
-// // set up to take exceptions and traps while in the kernel.
-// void
-// trapinithart(void)
-// {
-//   w_stvec((uint64)kernelvec);
-// }
+// set up to take exceptions and traps while in the kernel.
+pub fn trapinithart() void {
+  riscv.writeReg(.stvec, @ptrToInt(kernelvec));
+}
 
 // //
 // // handle an interrupt, exception, or system call from user space.

@@ -2,6 +2,7 @@ const console = @import("console.zig");
 const kalloc = @import("kalloc.zig");
 const proc = @import("proc.zig");
 const printf = @import("printf.zig");
+const trap = @import("trap.zig");
 const vm = @import("vm.zig");
 
 var started: bool = false;
@@ -18,8 +19,8 @@ pub export fn main() void {
         vm.kvminit();       // create kernel page table
         vm.kvminithart();   // turn on paging
         proc.procinit();      // process table
-        // trapinit();      // trap vectors
-        // trapinithart();  // install kernel trap vector
+        trap.trapinit();      // trap vectors
+        trap.trapinithart();  // install kernel trap vector
         // plicinit();      // set up interrupt controller
         // plicinithart();  // ask PLIC for device interrupts
         // binit();         // buffer cache
@@ -36,7 +37,7 @@ pub export fn main() void {
         // TODO print should support %llu
         printf.printf("hart %d starting\n", .{@intCast(i32, proc.cpuid())});
         vm.kvminithart();    // turn on paging
-        // trapinithart();   // install kernel trap vector
+        trap.trapinithart();   // install kernel trap vector
         // plicinithart();   // ask PLIC for device interrupts
     }
 
