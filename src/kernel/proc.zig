@@ -126,18 +126,18 @@ var proc: [param.NPROC]Proc = std.mem.zeroes([param.NPROC]Proc);
 // struct proc *initproc;
 
 // int nextpid = 1;
-// struct spinlock pid_lock;
+var pid_lock: spinlock.Spinlock = .{};
 
 // extern void forkret(void);
 // static void freeproc(struct proc *p);
 
 // extern char trampoline[]; // trampoline.S
 
-// // helps ensure that wakeups of wait()ing
-// // parents are not lost. helps obey the
-// // memory model when using p->parent.
-// // must be acquired before any p->lock.
-// struct spinlock wait_lock;
+// helps ensure that wakeups of wait()ing
+// parents are not lost. helps obey the
+// memory model when using p->parent.
+// must be acquired before any p->lock.
+var wait_lock: spinlock.Spinlock = .{};
 
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
@@ -150,19 +150,15 @@ pub fn proc_mapstacks(kpgtbl: *riscv.pagetable_t) void {
     }
 }
 
-// // initialize the proc table at boot time.
-// void
-// procinit(void)
-// {
-//   struct proc *p;
-  
-//   initlock(&pid_lock, "nextpid");
-//   initlock(&wait_lock, "wait_lock");
-//   for(p = proc; p < &proc[NPROC]; p++) {
-//       initlock(&p->lock, "proc");
-//       p->kstack = KSTACK((int) (p - proc));
-//   }
-// }
+// initialize the proc table at boot time.
+pub fn procinit() void {
+  spinlock.initlock(&pid_lock, "nextpid");
+  spinlock.initlock(&wait_lock, "wait_lock");
+  for (proc) |*p, i| {
+      spinlock.initlock(&p.lock, "proc");
+      p.kstack = memlayout.kstack(i);
+  }
+}
 
 // Must be called with interrupts disabled,
 // to prevent race with process being moved

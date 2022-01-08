@@ -17,7 +17,7 @@ pub export fn main() void {
         kalloc.kinit();         // physical page allocator
         vm.kvminit();       // create kernel page table
         vm.kvminithart();   // turn on paging
-        // procinit();      // process table
+        proc.procinit();      // process table
         // trapinit();      // trap vectors
         // trapinithart();  // install kernel trap vector
         // plicinit();      // set up interrupt controller
