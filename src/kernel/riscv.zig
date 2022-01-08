@@ -81,7 +81,7 @@ pub const MIE_MSIE: u64 = (1 << 3); // software
 // use riscv's sv39 page table scheme.
 const SATP_SV39: u64 = (8 << 60);
 
-pub fn MAKE_SATP(pagetable: u64) u64 {
+pub fn makeSatp(pagetable: u64) u64 {
     return SATP_SV39 | (pagetable >> 12);
 }
 

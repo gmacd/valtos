@@ -51,14 +51,12 @@ pub fn kvminit() void {
     kernel_pagetable = kvmmake();
 }
 
-// // Switch h/w page table register to the kernel's page table,
-// // and enable paging.
-// void
-// kvminithart()
-// {
-//   w_satp(MAKE_SATP(kernel_pagetable));
-//   sfence_vma();
-// }
+// Switch h/w page table register to the kernel's page table,
+// and enable paging.
+pub fn kvminithart() void {
+  riscv.writeReg(.satp, riscv.makeSatp(@ptrToInt(kernel_pagetable)));
+  riscv.sfenceVma();
+}
 
 // Return the address of the PTE in page table pagetable
 // that corresponds to virtual address va.  If alloc is true,

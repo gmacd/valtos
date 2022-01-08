@@ -16,7 +16,7 @@ pub export fn main() void {
         printf.printf("\n", .{});
         kalloc.kinit();         // physical page allocator
         vm.kvminit();       // create kernel page table
-        // kvminithart();   // turn on paging
+        vm.kvminithart();   // turn on paging
         // procinit();      // process table
         // trapinit();      // trap vectors
         // trapinithart();  // install kernel trap vector
@@ -35,7 +35,7 @@ pub export fn main() void {
         }
         // TODO print should support %llu
         printf.printf("hart %d starting\n", .{@intCast(i32, proc.cpuid())});
-        // kvminithart();    // turn on paging
+        vm.kvminithart();    // turn on paging
         // trapinithart();   // install kernel trap vector
         // plicinithart();   // ask PLIC for device interrupts
     }
