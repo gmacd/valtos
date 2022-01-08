@@ -117,7 +117,7 @@ pub fn printf(comptime fmt: []const u8, args: anytype) void {
     }
 }
 
-pub fn panic(comptime s: []const u8) void {
+pub fn panic(comptime s: []const u8) noreturn {
     pr.locking = false;
     printf("panic: ", .{});
     printf(s, .{});

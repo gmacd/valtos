@@ -59,16 +59,19 @@ pub fn kfree(pa: u64) void {
 // Allocate one 4096-byte page of physical memory.
 // Returns a pointer that the kernel can use.
 // Returns 0 if the memory cannot be allocated.
-pub fn kalloc() *u8 {
+pub fn kalloc() ?[*]u8 {
     spinlock.acquire(&kmem.lock);
-    var r = kmem.freelist;
-    if (r) {
-        kmem.freelist = r.next;
+    var page = kmem.freelist;
+    if (page) |p| {
+        kmem.freelist = p.next;
     }
     spinlock.release(&kmem.lock);
 
-    if (r) {
-        string.memset(r, 5, PGSIZE); // fill with junk
+    if (page) |p| {
+        var rawBuf: [*]u8 = @ptrCast([*]u8, p);
+        _ = string.memset(rawBuf, 5, PGSIZE); // fill with junk
+        return rawBuf;
+    } else {
+        return null;
     }
-    return r;
 }

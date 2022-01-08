@@ -16,6 +16,8 @@
 - [Xv6 riscv code](https://github.com/mit-pdos/xv6-riscv)
 - [Xv6 book](https://pdos.csail.mit.edu/6.828/2021/xv6/book-riscv-rev2.pdf)
 - [MIT OS Course](https://pdos.csail.mit.edu/6.828/2021/)
+- Future work
+  - [FastVM](https://github.com/FastVM/minivm)
 
 ## Riscv
 - [Code Models](https://www.sifive.com/blog/all-aboard-part-4-risc-v-code-models)
@@ -42,7 +44,7 @@
   - [x] kernelvec.S
   - [ ] log.c
   - [ ] main.c
-  - [ ] memlayout.h
+  - [x] memlayout.h
   - [x] param.h
   - [ ] pipe.c
   - [ ] plic.c
@@ -50,7 +52,7 @@
   - [ ] proc.c (either_copyin, either_copyout)
   - [ ] proc.h
   - [ ] ramdisk.c
-  - [ ] riscv.h
+  - [x] riscv.h
   - [ ] sleeplock.c
   - [ ] sleeplock.h
   - [x] spinlock.c
@@ -95,3 +97,6 @@
   - [ ] usys.pl
   - [ ] wc.c
   - [ ] zombie.c
+- Todos
+  - Address todos in code
+  - Use @memset or @memcpy?

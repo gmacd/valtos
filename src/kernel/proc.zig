@@ -1,10 +1,13 @@
 const std = @import("std");
 
+const kalloc = @import("kalloc.zig");
+const memlayout = @import("memlayout.zig");
 const param = @import("param.zig");
 const printf = @import("printf.zig");
 const riscv = @import("riscv.zig");
 const spinlock = @import("spinlock.zig");
 const string = @import("string.zig");
+const vm = @import("vm.zig");
 
 extern fn swtch(oldCtx: *Context, newCtx: *Context) void;
 
@@ -136,21 +139,16 @@ var proc: [param.NPROC]Proc = std.mem.zeroes([param.NPROC]Proc);
 // // must be acquired before any p->lock.
 // struct spinlock wait_lock;
 
-// // Allocate a page for each process's kernel stack.
-// // Map it high in memory, followed by an invalid
-// // guard page.
-// void
-// proc_mapstacks(pagetable_t kpgtbl) {
-//   struct proc *p;
-  
-//   for(p = proc; p < &proc[NPROC]; p++) {
-//     char *pa = kalloc();
-//     if(pa == 0)
-//       panic("kalloc");
-//     uint64 va = KSTACK((int) (p - proc));
-//     kvmmap(kpgtbl, va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
-//   }
-// }
+// Allocate a page for each process's kernel stack.
+// Map it high in memory, followed by an invalid
+// guard page.
+pub fn proc_mapstacks(kpgtbl: *riscv.pagetable_t) void {
+    for (proc) |_, i| {
+        var pa = kalloc.kalloc() orelse printf.panic("kalloc");
+        var va = memlayout.kstack(i);
+        vm.kvmmap(kpgtbl, va, @ptrToInt(pa), riscv.PGSIZE, riscv.PTE_R | riscv.PTE_W);
+    }
+}
 
 // // initialize the proc table at boot time.
 // void
@@ -577,7 +575,7 @@ pub fn myproc() ?*Proc {
 // break in the few places where a lock is held but
 // there's no process.
 pub fn sched() void {
-    var p = myproc() orelse { printf.panic("no proc to ssched"); return; };
+    var p = myproc() orelse { printf.panic("no proc to sched"); return; };
 
     if (!spinlock.holding(&p.lock)) {
         printf.panic("sched p->lock");

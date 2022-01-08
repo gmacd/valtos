@@ -2,6 +2,7 @@ const console = @import("console.zig");
 const kalloc = @import("kalloc.zig");
 const proc = @import("proc.zig");
 const printf = @import("printf.zig");
+const vm = @import("vm.zig");
 
 var started: bool = false;
 
@@ -14,7 +15,7 @@ pub export fn main() void {
         printf.printf("xv6 kernel is booting\n", .{});
         printf.printf("\n", .{});
         kalloc.kinit();         // physical page allocator
-        // kvminit();       // create kernel page table
+        vm.kvminit();       // create kernel page table
         // kvminithart();   // turn on paging
         // procinit();      // process table
         // trapinit();      // trap vectors
