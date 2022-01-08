@@ -47,7 +47,7 @@
   - [x] memlayout.h
   - [x] param.h
   - [ ] pipe.c
-  - [ ] plic.c
+  - [x] plic.c
   - [x] printf.c
   - [ ] proc.c (either_copyin, either_copyout)
   - [ ] proc.h

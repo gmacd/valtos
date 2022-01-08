@@ -1,5 +1,6 @@
 const console = @import("console.zig");
 const kalloc = @import("kalloc.zig");
+const plic = @import("plic.zig");
 const proc = @import("proc.zig");
 const printf = @import("printf.zig");
 const trap = @import("trap.zig");
@@ -21,8 +22,8 @@ pub export fn main() void {
         proc.procinit();      // process table
         trap.trapinit();      // trap vectors
         trap.trapinithart();  // install kernel trap vector
-        // plicinit();      // set up interrupt controller
-        // plicinithart();  // ask PLIC for device interrupts
+        plic.plicinit();      // set up interrupt controller
+        plic.plicinithart();  // ask PLIC for device interrupts
         // binit();         // buffer cache
         // iinit();         // inode table
         // fileinit();      // file table
@@ -38,7 +39,7 @@ pub export fn main() void {
         printf.printf("hart %d starting\n", .{@intCast(i32, proc.cpuid())});
         vm.kvminithart();    // turn on paging
         trap.trapinithart();   // install kernel trap vector
-        // plicinithart();   // ask PLIC for device interrupts
+        plic.plicinithart();   // ask PLIC for device interrupts
     }
 
     // scheduler();
