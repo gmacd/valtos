@@ -1,6 +1,13 @@
 // On-disk file system format.
 // Both the kernel and user programs use this header file.
 
+// TODO ^ split so can be used by kernel or userspace
+
+const file = @import("file.zig");
+const param = @import("param.zig");
+const sleeplock = @import("sleeplock.zig");
+const spinlock = @import("spinlock.zig");
+
 const ROOTINO = 1;   // root i-number
 pub const BSIZE = 1024;  // block size
 
@@ -21,11 +28,10 @@ pub const BSIZE = 1024;  // block size
 //   uint bmapstart;    // Block number of first free map block
 // };
 
-// #define FSMAGIC 0x10203040
-
-// #define NDIRECT 12
-// #define NINDIRECT (BSIZE / sizeof(uint))
-// #define MAXFILE (NDIRECT + NINDIRECT)
+const FSMAGIC = 0x10203040;
+pub const NDIRECT = 12;
+const NINDIRECT = (BSIZE / @sizeOf(u32));
+const MAXFILE = (NDIRECT + NINDIRECT);
 
 // // On-disk inode structure
 // struct dinode {
@@ -218,21 +224,18 @@ pub const BSIZE = 1024;  // block size
 // dev, and inum.  One must hold ip->lock in order to
 // read or write that inode's ip->valid, ip->size, ip->type, &c.
 
-// struct {
-//   struct spinlock lock;
-//   struct inode inode[NINODE];
-// } itable;
+const ITable = struct {
+    lock: spinlock.Spinlock = .{},
+    inode: [param.NINODE]file.Inode = [_]file.Inode{.{}} ** param.NINODE,
+};
+var itable = ITable{};
 
-// void
-// iinit()
-// {
-//   int i = 0;
-  
-//   initlock(&itable.lock, "itable");
-//   for(i = 0; i < NINODE; i++) {
-//     initsleeplock(&itable.inode[i].lock, "inode");
-//   }
-// }
+pub fn iinit() void{
+    spinlock.initlock(&itable.lock, "itable");
+    for (itable.inode) |*inode| {
+        sleeplock.initsleeplock(&inode.lock, "inode");
+    }
+}
 
 // static struct inode* iget(uint dev, uint inum);
 

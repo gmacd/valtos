@@ -1,5 +1,6 @@
 const bio = @import("bio.zig");
 const console = @import("console.zig");
+const fs = @import("fs.zig");
 const kalloc = @import("kalloc.zig");
 const plic = @import("plic.zig");
 const proc = @import("proc.zig");
@@ -26,7 +27,7 @@ pub export fn main() void {
         plic.plicinit();      // set up interrupt controller
         plic.plicinithart();  // ask PLIC for device interrupts
         bio.binit();         // buffer cache
-        // iinit();         // inode table
+        fs.iinit();         // inode table
         // fileinit();      // file table
         // virtio_disk_init(); // emulated hard disk
         // userinit();      // first user process

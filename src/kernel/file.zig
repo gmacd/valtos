@@ -4,7 +4,9 @@
 
 const std = @import("std");
 
+const fs = @import("fs.zig");
 const param = @import("param.zig");
+const sleeplock = @import("sleeplock.zig");
 
 // struct file {
 //   enum { FD_NONE, FD_PIPE, FD_INODE, FD_DEVICE } type;
@@ -21,21 +23,21 @@ const param = @import("param.zig");
 // #define minor(dev)  ((dev) & 0xFFFF)
 // #define	mkdev(m,n)  ((uint)((m)<<16| (n)))
 
-// // in-memory copy of an inode
-// struct inode {
-//   uint dev;           // Device number
-//   uint inum;          // Inode number
-//   int ref;            // Reference count
-//   struct sleeplock lock; // protects everything below here
-//   int valid;          // inode has been read from disk?
+// in-memory copy of an inode
+pub const Inode = struct {
+    dev: u32 = 0,           // Device number
+    inum: u32 = 0,          // Inode number
+    ref: i32 = 0,            // Reference count
+    lock: sleeplock.Sleeplock = .{}, // protects everything below here
+    valid: bool = false,          // inode has been read from disk?
 
-//   short type;         // copy of disk inode
-//   short major;
-//   short minor;
-//   short nlink;
-//   uint size;
-//   uint addrs[NDIRECT+1];
-// };
+    type: i16 = 0,         // copy of disk inode
+    major: i16 = 0,
+    minor: i16 = 0,
+    nlink: i16 = 0,
+    size: u32 = 0,
+    addrs: [fs.NDIRECT+1]u32 = [_]u32{0} ** (fs.NDIRECT+1),
+};
 
 // map major device number to device functions.
 pub const DevSw = struct {
