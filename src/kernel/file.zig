@@ -6,18 +6,21 @@ const std = @import("std");
 
 const fs = @import("fs.zig");
 const param = @import("param.zig");
+const pipe = @import("pipe.zig");
 const sleeplock = @import("sleeplock.zig");
+const spinlock = @import("spinlock.zig");
 
-// struct file {
-//   enum { FD_NONE, FD_PIPE, FD_INODE, FD_DEVICE } type;
-//   int ref; // reference count
-//   char readable;
-//   char writable;
-//   struct pipe *pipe; // FD_PIPE
-//   struct inode *ip;  // FD_INODE and FD_DEVICE
-//   uint off;          // FD_INODE
-//   short major;       // FD_DEVICE
-// };
+const FileType = enum(u16) { FD_NONE, FD_PIPE, FD_INODE, FD_DEVICE };
+
+pub const File = struct {
+    ref: i32 = 0, // reference count
+    readable: u8 = 0,
+    writable: u8 = 0,
+    pipe: ?*pipe.Pipe = null, // FD_PIPE
+    ip: ?*Inode = null, // FD_INODE and FD_DEVICE
+    off: u32 = 0, // FD_INODE
+    major: u16 = 0, // FD_DEVICE
+};
 
 // #define major(dev)  ((dev) >> 16 & 0xFFFF)
 // #define minor(dev)  ((dev) & 0xFFFF)
@@ -25,40 +28,39 @@ const sleeplock = @import("sleeplock.zig");
 
 // in-memory copy of an inode
 pub const Inode = struct {
-    dev: u32 = 0,           // Device number
-    inum: u32 = 0,          // Inode number
-    ref: i32 = 0,            // Reference count
+    dev: u32 = 0, // Device number
+    inum: u32 = 0, // Inode number
+    ref: i32 = 0, // Reference count
     lock: sleeplock.Sleeplock = .{}, // protects everything below here
-    valid: bool = false,          // inode has been read from disk?
+    valid: bool = false, // inode has been read from disk?
 
-    type: i16 = 0,         // copy of disk inode
+    type: FileType = .FD_NONE, // copy of disk inode
     major: i16 = 0,
     minor: i16 = 0,
     nlink: i16 = 0,
     size: u32 = 0,
-    addrs: [fs.NDIRECT+1]u32 = [_]u32{0} ** (fs.NDIRECT+1),
+    addrs: [fs.NDIRECT + 1]u32 = [_]u32{0} ** (fs.NDIRECT + 1),
 };
 
 // map major device number to device functions.
 pub const DevSw = struct {
-    read: ?fn(user_dst: i32, dst: u64, n: i32) i32 = null,
-    write: ?fn(user_dst: i32, src: u64, n: i32) i32 = null,
+    read: ?fn (user_dst: i32, dst: u64, n: i32) i32 = null,
+    write: ?fn (user_dst: i32, src: u64, n: i32) i32 = null,
 };
 
 pub const CONSOLE = 1;
 
 pub var devsw: [param.NDEV]DevSw = std.mem.zeroes([param.NDEV]DevSw);
 
-// struct {
-//   struct spinlock lock;
-//   struct file file[NFILE];
-// } ftable;
+pub const Ftable = struct {
+    lock: spinlock.Spinlock = .{},
+    file: [param.NFILE]File = [_]File{.{}} ** (param.NFILE),
+};
+var ftable: Ftable = .{};
 
-// void
-// fileinit(void)
-// {
-//   initlock(&ftable.lock, "ftable");
-// }
+pub fn fileinit() void {
+    spinlock.initlock(&ftable.lock, "ftable");
+}
 
 // // Allocate a file structure.
 // struct file*
@@ -124,7 +126,7 @@ pub var devsw: [param.NDEV]DevSw = std.mem.zeroes([param.NDEV]DevSw);
 // {
 //   struct proc *p = myproc();
 //   struct stat st;
-  
+
 //   if(f->type == FD_INODE || f->type == FD_DEVICE){
 //     ilock(f->ip);
 //     stati(f->ip, &st);
