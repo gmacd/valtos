@@ -27,7 +27,7 @@
   - Compare time, binary size, LoC when building zig xv6 vs c xv6
 - ../../xv6-riscv//kernel:
   - [ ] bio.c
-  - [ ] buf.h
+  - [x] buf.h
   - [x] console.c
   - [ ] date.h
   - [x] defs.h
@@ -53,8 +53,8 @@
   - [ ] proc.h
   - [ ] ramdisk.c
   - [x] riscv.h
-  - [ ] sleeplock.c
-  - [ ] sleeplock.h
+  - [x] sleeplock.c
+  - [x] sleeplock.h
   - [x] spinlock.c
   - [x] spinlock.h
   - [x] start.c

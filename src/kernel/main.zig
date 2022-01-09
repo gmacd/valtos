@@ -1,3 +1,4 @@
+const bio = @import("bio.zig");
 const console = @import("console.zig");
 const kalloc = @import("kalloc.zig");
 const plic = @import("plic.zig");
@@ -24,7 +25,7 @@ pub export fn main() void {
         trap.trapinithart();  // install kernel trap vector
         plic.plicinit();      // set up interrupt controller
         plic.plicinithart();  // ask PLIC for device interrupts
-        // binit();         // buffer cache
+        bio.binit();         // buffer cache
         // iinit();         // inode table
         // fileinit();      // file table
         // virtio_disk_init(); // emulated hard disk

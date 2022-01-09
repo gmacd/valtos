@@ -14,9 +14,9 @@ pub const Spinlock = struct {
 };
 
 pub fn initlock(lk: *Spinlock, name: []const u8) void {
-  lk.name = name;
-  lk.locked = false;
-  lk.cpu = null;
+    lk.name = name;
+    lk.locked = false;
+    lk.cpu = null;
 }
 
 // Acquire the lock.
