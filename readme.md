@@ -100,3 +100,4 @@
 - Todos
   - Address todos in code
   - Use @memset or @memcpy?
+  - Compare use of zeros() to setting defaults on individual fields in structs

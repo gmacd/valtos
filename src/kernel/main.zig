@@ -7,6 +7,7 @@ const plic = @import("plic.zig");
 const proc = @import("proc.zig");
 const printf = @import("printf.zig");
 const trap = @import("trap.zig");
+const virtio_disk = @import("virtio_disk.zig");
 const vm = @import("vm.zig");
 
 var started: bool = false;
@@ -30,7 +31,7 @@ pub export fn main() void {
         bio.binit();         // buffer cache
         fs.iinit();         // inode table
         file.fileinit();      // file table
-        // virtio_disk_init(); // emulated hard disk
+        virtio_disk.virtio_disk_init(); // emulated hard disk
         // userinit();      // first user process
 
         @atomicStore(bool, &started, true, .SeqCst);

@@ -18,7 +18,7 @@ const param = @import("param.zig");
 const sleeplock = @import("sleeplock.zig");
 const spinlock = @import("spinlock.zig");
 
-const Buf = struct {
+pub const Buf = struct {
     valid: bool = false,   // has data been read from disk?
     disk: bool = false,    // does disk "own" buf?
     dev: u32 = 0,
