@@ -9,6 +9,7 @@
 const bio = @import("bio.zig");
 const memlayout = @import("memlayout.zig");
 const printf = @import("printf.zig");
+const proc = @import("proc.zig");
 const riscv = @import("riscv.zig");
 const spinlock = @import("spinlock.zig");
 const string = @import("string.zig");
@@ -155,7 +156,7 @@ const Disk = struct {
     used: ?*VirtQUsed = null,
 
     // our own book-keeping.
-    free: [NUM]u8 = [_]u8{0} ** NUM,  // is a descriptor free?
+    free: [NUM]bool = [_]bool{false} ** NUM,  // is a descriptor free?
     used_idx: u16 = 0, // we've looked this far in used[2..NUM].
 
     // track info about in-flight operations,
@@ -232,40 +233,38 @@ pub fn virtio_disk_init() void {
 
     // all NUM descriptors start out unused.
     for (disk.free) |_, i| {
-        disk.free[i] = 1;
+        disk.free[i] = true;
     }
 
     // plic.c and trap.c arrange for interrupts from VIRTIO0_IRQ.
 }
 
-// // find a free descriptor, mark it non-free, return its index.
-// static int
-// alloc_desc()
-// {
-//   for(int i = 0; i < NUM; i++){
-//     if(disk.free[i]){
-//       disk.free[i] = 0;
-//       return i;
-//     }
-//   }
-//   return -1;
-// }
+// find a free descriptor, mark it non-free, return its index.
+fn alloc_desc() i32 {
+    for (disk.free) |*free, i| {
+        if (free.*) {
+            free.* = false;
+            return i;
+        }
+    }
+    return -1;
+}
 
-// // mark a descriptor as free.
-// static void
-// free_desc(int i)
-// {
-//   if(i >= NUM)
-//     panic("free_desc 1");
-//   if(disk.free[i])
-//     panic("free_desc 2");
-//   disk.desc[i].addr = 0;
-//   disk.desc[i].len = 0;
-//   disk.desc[i].flags = 0;
-//   disk.desc[i].next = 0;
-//   disk.free[i] = 1;
-//   wakeup(&disk.free[0]);
-// }
+// mark a descriptor as free.
+fn free_desc(i: i32) void {
+    if (i >= NUM) {
+        printf.panic("free_desc 1");
+    }
+    if (disk.free[i]) {
+        printf.panic("free_desc 2");
+    }
+    disk.desc[i].addr = 0;
+    disk.desc[i].len = 0;
+    disk.desc[i].flags = 0;
+    disk.desc[i].next = 0;
+    disk.free[i] = true;
+    proc.wakeup(&disk.free[0]);
+}
 
 // // free a chain of descriptors.
 // static void
